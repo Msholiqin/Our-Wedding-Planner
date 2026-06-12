@@ -42,6 +42,79 @@
             'fade-in': 'fadeIn 0.2s ease-out',
             'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
           },
+
+          // panggil database
+          <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js";
+
+    // Import the functions you need from the SDKs you need
+
+import { initializeApp } from "firebase/app";
+
+import { getAnalytics } from "firebase/analytics";
+
+// TODO: Add SDKs for Firebase products that you want to use
+
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+
+
+// Your web app's Firebase configuration
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBsHcpueGEPQpoQf2Xg39-tDNiu7W2G6mo",
+
+  authDomain: "our-wedding-planner-a2267.firebaseapp.com",
+
+  projectId: "our-wedding-planner-a2267",
+
+  storageBucket: "our-wedding-planner-a2267.firebasestorage.app",
+
+  messagingSenderId: "935803525420",
+
+  appId: "1:935803525420:web:2717022c7d055a0fc33489",
+
+  measurementId: "G-ZE2FFMWG6X"
+
+};
+
+
+
+// Initialize Firebase
+
+const app = initializeApp(firebaseConfig);
+
+const analytics = getAnalytics(app);
+
+  // Konfigurasi dari langkah 1
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    // ... config lainnya
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Fungsi untuk menyimpan data
+  async function simpanData(nama, pesan) {
+    try {
+      const docRef = await addDoc(collection(db, "pesan_user"), {
+        nama: nama,
+        pesan: pesan,
+        timestamp: new Date()
+      });
+      console.log("Data tersimpan dengan ID: ", docRef.id);
+    } catch (e) {
+      console.error("Gagal menyimpan: ", e);
+    }
+  }
+</script>
           keyframes: {
             fadeInDown: {
               '0%': { opacity: '0', transform: 'translateY(-10px)' },
