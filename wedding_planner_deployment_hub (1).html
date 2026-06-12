@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Wedding Planner - Google Sheets Deployment Hub</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Babel for JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-serif-elegant {
+      font-family: 'Playfair Display', serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.5);
+      border-radius: 3px;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          animation: {
+            'fade-in-down': 'fadeInDown 0.3s ease-out',
+            'fade-in': 'fadeIn 0.2s ease-out',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeInDown: {
+              '0%': { opacity: '0', transform: 'translateY(-10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen">
+
+  <!-- ==================== WADAH KODE SUMBER AMAN (Bypass Babel template literal bugs) ==================== -->
+  
+  <!-- 1. Sumber Kode Code.gs -->
+  <textarea id="srcCodeGS" style="display: none;">function doGet() {
+  return HtmlService.createHtmlOutputFromFile('Index')
+      .setTitle('Our Wedding Planner')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+}
+
+/**
+ * Mendapatkan atau membuat sheet database otomatis di file Spreadsheet aktif
+ */
+function getSpreadsheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("PlannerData");
+  
+  if (!sheet) {
+    sheet = ss.insertSheet("PlannerData");
+    sheet.appendRow(["Category ID", "Category Name", "Item ID", "Item Name", "Price", "Description", "Is Bought"]);
+    sheet.getRange(1, 1, 1, 7).setFontWeight("bold");
+    sheet.getRange(1, 1, 1, 7).setBackground("#f3f4f6");
+  }
+  return sheet;
+}
+
+/**
+ * Mengambil data dari Google Sheets dan menyusunnya kembali menjadi format objek untuk React
+ */
+function getPlannerData() {
+  try {
+    var sheet = getSpreadsheet();
+    var rows = sheet.getDataRange().getValues();
+    
+    // Ambil tanggal pernikahan dan nama pasangan dari PlannerSettings
+    var weddingDate = "2027-01-01"; // default awal
+    var coupleNames = "Romeo & Juliet"; // default awal
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var settingsSheet = ss.getSheetByName("PlannerSettings");
+    if (settingsSheet) {
+      var settingsRows = settingsSheet.getDataRange().getValues();
+      for (var j = 1; j < settingsRows.length; j++) {
+        if (settingsRows[j][0] === "weddingDate") {
+          var dateVal = settingsRows[j][1];
+          if (dateVal instanceof Date) {
+            weddingDate = Utilities.formatDate(dateVal, Session.getScriptTimeZone(), "yyyy-MM-dd");
+          } else {
+            weddingDate = String(dateVal);
+          }
+        } else if (settingsRows[j][0] === "coupleNames") {
+          coupleNames = String(settingsRows[j][1]);
+        }
+      }
+    } else {
+      // Buat settings sheet otomatis
+      settingsSheet = ss.insertSheet("PlannerSettings");
+      settingsSheet.appendRow(["Key", "Value"]);
+      settingsSheet.appendRow(["weddingDate", "2027-01-01"]);
+      settingsSheet.appendRow(["coupleNames", "Romeo & Juliet"]);
+      settingsSheet.getRange(1, 1, 1, 2).setFontWeight("bold");
+      settingsSheet.getRange(1, 1, 1, 2).setBackground("#f3f4f6");
+    }
+
+    if (rows.length <= 1) {
+      return { categories: [], weddingDate: weddingDate, coupleNames: coupleNames };
+    }
+
+    var categoriesMap = {};
+    var categoriesOrder = [];
+
+    for (var i = 1; i < rows.length; i++) {
+      var catId = rows[i][0];
+      var catName = rows[i][1];
+      var itemId = rows[i][2];
+      var itemName = rows[i][3];
+      var price = rows[i][4];
+      var description = rows[i][5];
+      var isBought = rows[i][6];
+
+      if (!catId) continue;
+
+      if (!categoriesMap[catId]) {
+        categoriesMap[catId] = {
+          id: catId,
+          name: catName,
+          items: []
+        };
+        categoriesOrder.push(catId);
+      }
+
+      if (itemId) {
+        categoriesMap[catId].items.push({
+          id: itemId,
+          name: itemName,
+          price: Number(price) || 0,
+          description: description || '',
+          isBought: isBought === true || isBought === "TRUE"
+        });
+      }
+    }
+
+    var categories = categoriesOrder.map(function(id) {
+      return categoriesMap[id];
+    });
+
+    return { categories: categories, weddingDate: weddingDate, coupleNames: coupleNames };
+  } catch (e) {
+    Logger.log(e.toString());
+    throw new Error("Gagal memuat data: " + e.message);
+  }
+}
+
+/**
+ * Menyimpan data dari aplikasi React kembali ke Google Sheets
+ */
+function savePlannerData(newData) {
+  try {
+    var sheet = getSpreadsheet();
+    sheet.clearContents();
+    
+    sheet.appendRow(["Category ID", "Category Name", "Item ID", "Item Name", "Price", "Description", "Is Bought"]);
+    sheet.getRange(1, 1, 1, 7).setFontWeight("bold");
+    sheet.getRange(1, 1, 1, 7).setBackground("#f3f4f6");
+
+    if (!newData) {
+      return { success: true };
+    }
+
+    // Update settings di PlannerSettings jika dikirimkan oleh React
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var settingsSheet = ss.getSheetByName("PlannerSettings");
+    if (!settingsSheet) {
+      settingsSheet = ss.insertSheet("PlannerSettings");
+    }
+    settingsSheet.clearContents();
+    settingsSheet.appendRow(["Key", "Value"]);
+    settingsSheet.getRange(1, 1, 1, 2).setFontWeight("bold");
+    settingsSheet.getRange(1, 1, 1, 2).setBackground("#f3f4f6");
+    
+    var dateToSave = newData.weddingDate || "2027-01-01";
+    var namesToSave = newData.coupleNames || "Romeo & Juliet";
+    settingsSheet.appendRow(["weddingDate", dateToSave]);
+    settingsSheet.appendRow(["coupleNames", namesToSave]);
+
+    if (!newData.categories || newData.categories.length === 0) {
+      return { success: true };
+    }
+
+    var rowsToAppend = [];
+    
+    newData.categories.forEach(function(cat) {
+      if (cat.items && cat.items.length > 0) {
+        cat.items.forEach(function(item) {
+          rowsToAppend.push([
+            cat.id,
+            cat.name,
+            item.id,
+            item.name,
+            item.price,
+            item.description,
+            item.isBought
+          ]);
+        });
+      } else {
+        rowsToAppend.push([
+          cat.id,
+          cat.name,
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]);
+      }
+    });
+
+    if (rowsToAppend.length > 0) {
+      sheet.getRange(2, 1, rowsToAppend.length, 7).setValues(rowsToAppend);
+    }
+
+    return { success: true };
+  } catch (e) {
+    Logger.log(e.toString());
+    throw new Error("Gagal menyimpan data: " + e.message);
+  }
+}</textarea>
+
+  <!-- 2. Sumber Kode Index.html -->
+  <textarea id="srcCodeHTML" style="display: none;"><!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Wedding Planner - Google Sheets Sync</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {} }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300 text-gray-800 dark:text-gray-100">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    const Icons = {
+      Heart: () => <svg className="w-6 h-6 text-pink-500 fill-pink-500 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>,
+      Sun: () => <svg className="w-5 h-5 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>,
+      Moon: () => <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>,
+      Dashboard: () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>,
+      List: () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h.01M3 6h.01M3 18h.01M8 12h13M8 6h13M8 18h13"/></svg>,
+      Wallet: () => <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9"/></svg>,
+      CheckCircle: () => <svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>,
+      Pie: () => <svg className="w-5 h-5 text-pink-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>,
+      ChevronDown: () => <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>,
+      ChevronRight: () => <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>,
+      Plus: () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5v14"/></svg>,
+      Trash: () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
+      Edit: () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>,
+      Circle: () => <svg className="w-6 h-6 text-gray-300 dark:text-gray-600 hover:text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>,
+      CheckFilled: () => <svg className="w-6 h-6 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>,
+      Check: () => <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6 9 17l-5-5"/></svg>,
+      X: () => <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6 6 18M6 6l12 12"/></svg>,
+      Calendar: () => <svg className="w-4 h-4 text-pink-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+      Pencil: () => <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    };
+
+    const formatIDR = (number) => {
+      return new Intl.NumberFormat('id-ID', { 
+        style: 'currency', 
+        currency: 'IDR', 
+        maximumFractionDigits: 0 
+      }).format(number || 0);
+    };
+
+    function App() {
+      const [data, setData] = useState({ categories: [], weddingDate: '2027-01-01', coupleNames: 'Romeo & Juliet' });
+      const [loading, setLoading] = useState(true);
+      const [saving, setSaving] = useState(false);
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [isDarkMode, setIsDarkMode] = useState(false);
+      const [toastMessage, setToastMessage] = useState('');
+      const [isEditingDate, setIsEditingDate] = useState(false);
+      const [isEditingNames, setIsEditingNames] = useState(false);
+
+      const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null
+      });
+
+      const [newCategoryName, setNewCategoryName] = useState('');
+      const [editingCategory, setEditingCategory] = useState(null);
+      const [editCategoryName, setEditCategoryName] = useState('');
+      const [newItemInputs, setNewItemInputs] = useState({});
+      const [expandedCategories, setExpandedCategories] = useState({});
+
+      const [editingItemId, setEditingItemId] = useState(null);
+      const [editItemName, setEditItemName] = useState('');
+      const [editItemPrice, setEditItemPrice] = useState('');
+      const [editItemDescription, setEditItemDescription] = useState('');
+
+      useEffect(() => {
+        google.script.run
+          .withSuccessHandler((response) => {
+            setData(response || { categories: [], weddingDate: '2027-01-01', coupleNames: 'Romeo & Juliet' });
+            setLoading(false);
+          })
+          .withFailureHandler((error) => {
+            console.error("Gagal memuat:", error);
+            showToast("Gagal menyinkronkan data.");
+            setLoading(false);
+          })
+          .getPlannerData();
+      }, []);
+
+      const saveData = (newData) => {
+        setData(newData);
+        setSaving(true);
+        google.script.run
+          .withSuccessHandler(() => {
+            setSaving(false);
+            showToast("Perubahan tersimpan otomatis!");
+          })
+          .withFailureHandler((error) => {
+            setSaving(false);
+            console.error("Gagal menyimpan:", error);
+            showToast("Gagal menyimpan data!");
+          })
+          .savePlannerData(newData);
+      };
+
+      const handleUpdateWeddingDate = (newDate) => {
+        const updatedData = { ...data, weddingDate: newDate };
+        saveData(updatedData);
+        setIsEditingDate(false);
+      };
+
+      const handleUpdateCoupleNames = (newNames) => {
+        const updatedData = { ...data, coupleNames: newNames };
+        saveData(updatedData);
+      };
+
+      const showToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(''), 3000);
+      };
+
+      const triggerConfirm = (title, message, onConfirmAction) => {
+        setConfirmModal({
+          isOpen: true,
+          title,
+          message,
+          onConfirm: () => {
+            onConfirmAction();
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          }
+        });
+      };
+
+      useEffect(() => {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setIsDarkMode(isDark);
+      }, []);
+
+      useEffect(() => {
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [isDarkMode]);
+
+      const handleAddCategory = () => {
+        if (!newCategoryName.trim()) return;
+        const newCategory = {
+          id: 'cat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          name: newCategoryName,
+          items: []
+        };
+        const newData = { ...data, categories: [...data.categories, newCategory] };
+        saveData(newData);
+        setNewCategoryName('');
+      };
+
+      const handleDeleteCategory = (categoryId) => {
+        triggerConfirm(
+          "Hapus Kategori",
+          "Apakah Anda yakin ingin menghapus kategori ini beserta semua barang di dalamnya? Tindakan ini tidak dapat dibatalkan.",
+          () => {
+            const newData = { 
+              ...data, 
+              categories: data.categories.filter(c => c.id !== categoryId) 
+            };
+            saveData(newData);
+          }
+        );
+      };
+
+      const startEditCategory = (category) => {
+        setEditingCategory(category.id);
+        setEditCategoryName(category.name);
+      };
+
+      const saveEditCategory = () => {
+        if (!editCategoryName.trim()) return;
+        const newData = {
+          ...data,
+          categories: data.categories.map(c => 
+            c.id === editingCategory ? { ...c, name: editCategoryName } : c
+          )
+        };
+        saveData(newData);
+        setEditingCategory(null);
+      };
+
+      const toggleCategory = (categoryId) => {
+        setExpandedCategories(prev => ({
+          ...prev,
+          [categoryId]: prev[categoryId] === false ? true : false
+        }));
+      };
+
+      const handleAddItem = (categoryId) => {
+        const itemInput = newItemInputs[categoryId];
+        if (!itemInput || !itemInput.name.trim()) return;
+
+        const newItem = {
+          id: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          name: itemInput.name,
+          price: itemInput.price ? Number(itemInput.price) : 0,
+          description: itemInput.description || '',
+          isBought: false
+        };
+
+        const newData = {
+          ...data,
+          categories: data.categories.map(c => 
+            c.id === categoryId ? { ...c, items: [...c.items, newItem] } : c
+          )
+        };
+        
+        saveData(newData);
+        setNewItemInputs(prev => ({ ...prev, [categoryId]: { name: '', price: '', description: '' } }));
+      };
+
+      const handleUpdateItemInput = (categoryId, field, value) => {
+        setNewItemInputs(prev => ({
+          ...prev,
+          [categoryId]: { ...prev[categoryId], [field]: value }
+        }));
+      };
+
+      const toggleItemBought = (categoryId, itemId) => {
+        const newData = {
+          ...data,
+          categories: data.categories.map(c => {
+            if (c.id === categoryId) {
+              return {
+                ...c,
+                items: c.items.map(item => 
+                  item.id === itemId ? { ...item, isBought: !item.isBought } : item
+                )
+              };
+            }
+            return c;
+          })
+        };
+        saveData(newData);
+      };
+
+      const handleDeleteItem = (categoryId, itemId) => {
+        triggerConfirm(
+          "Hapus Barang",
+          "Apakah Anda yakin ingin menghapus barang ini?",
+          () => {
+            const newData = {
+              ...data,
+              categories: data.categories.map(c => {
+                if (c.id === categoryId) {
+                  return { ...c, items: c.items.filter(item => item.id !== itemId) };
+                }
+                return c;
+              })
+            };
+            saveData(newData);
+          }
+        );
+      };
+
+      const startEditItem = (item) => {
+        setEditingItemId(item.id);
+        setEditItemName(item.name);
+        setEditItemPrice(item.price ? String(item.price) : '');
+        setEditItemDescription(item.description || '');
+      };
+
+      const saveEditItem = (categoryId, itemId) => {
+        if (!editItemName.trim()) return;
+        const newData = {
+          ...data,
+          categories: data.categories.map(c => {
+            if (c.id === categoryId) {
+              return {
+                ...c,
+                items: c.items.map(item => 
+                  item.id === itemId 
+                    ? { ...item, name: editItemName, price: editItemPrice ? Number(editItemPrice) : 0, description: editItemDescription } 
+                    : item
+                )
+              };
+            }
+            return c;
+          })
+        };
+        saveData(newData);
+        setEditingItemId(null);
+      };
+
+      const stats = useMemo(() => {
+        let totalBudget = 0;
+        let totalSpent = 0;
+        let totalItems = 0;
+        let itemsBought = 0;
+        let categoryTotals = [];
+
+        data.categories.forEach(cat => {
+          let catBudget = 0;
+          cat.items.forEach(item => {
+            totalBudget += item.price;
+            catBudget += item.price;
+            totalItems++;
+            if (item.isBought) {
+              totalSpent += item.price;
+              itemsBought++;
+            }
+          });
+          if (catBudget > 0) {
+            categoryTotals.push({ name: cat.name, value: catBudget });
+          }
+        });
+
+        const progressPercent = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
+        const itemProgressPercent = totalItems > 0 ? Math.round((itemsBought / totalItems) * 100) : 0;
+
+        return { totalBudget, totalSpent, totalItems, itemsBought, categoryTotals, progressPercent, itemProgressPercent };
+      }, [data]);
+
+      const countdownStats = useMemo(() => {
+        const weddingDateStr = data.weddingDate || '2027-01-01';
+        const targetDate = new Date(weddingDateStr + "T00:00:00");
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const diffTime = targetDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = targetDate.toLocaleDateString('id-ID', options);
+
+        return {
+          daysLeft: diffDays,
+          isPast: diffDays < 0,
+          isToday: diffDays === 0,
+          formattedDate
+        };
+      }, [data.weddingDate]);
+
+      const PieChartSVG = ({ data }) => {
+        const total = data.reduce((sum, item) => sum + item.value, 0);
+        if (total === 0) return (
+          <div className="w-48 h-48 rounded-full border-4 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm text-center p-4">
+            Belum ada data anggaran
+          </div>
+        );
+
+        let cumulative = 0;
+        const radius = 25;
+        const circumference = 2 * Math.PI * radius;
+        const colors = ['#f43f5e', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#14b8a6'];
+
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 drop-shadow-md">
+            {data.map((slice, i) => {
+              const percent = slice.value / total;
+              const dashArray = `${percent * circumference} ${circumference}`;
+              const dashOffset = -(cumulative / total) * circumference;
+              cumulative += slice.value;
+              return (
+                <circle
+                  key={i}
+                  r={radius}
+                  cx="50"
+                  cy="50"
+                  fill="transparent"
+                  stroke={colors[i % colors.length]}
+                  strokeWidth="50"
+                  strokeDasharray={dashArray}
+                  strokeDashoffset={dashOffset}
+                  className="transition-all duration-1000 ease-in-out hover:opacity-80 cursor-pointer"
+                />
+              );
+            })}
+          </svg>
+        );
+      };
+
+      if (loading) {
+        return (
+          <div className="min-h-[400px] flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 transition-colors duration-300">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+              <p className="text-sm font-medium text-gray-500">Menghubungkan ke Sheets...</p>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="bg-slate-50 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300 rounded-2xl overflow-hidden shadow-inner p-4 md:p-6 border border-slate-200 dark:border-slate-800">
+          {toastMessage && (
+            <div className="fixed bottom-6 right-6 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center border border-slate-700 dark:border-slate-200">
+              <span className="font-medium text-sm">{toastMessage}</span>
+            </div>
+          )}
+
+          {confirmModal.isOpen && (
+            <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{confirmModal.title}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{confirmModal.message}</p>
+                <div className="flex justify-end gap-3">
+                  <button 
+                    onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                    className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={confirmModal.onConfirm}
+                    className="px-4 py-2 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors"
+                  >
+                    Ya, Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <header className="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-10 transition-colors duration-300 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Icons.Heart />
+                <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                  Our Wedding Planner
+                </h1>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-900 flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full bg-emerald-500 ${saving ? 'animate-ping' : 'animate-pulse'}`}></span>
+                  {saving ? 'Menyimpan...' : 'Sinkronisasi Sheets Aktif'}
+                </span>
+                <button 
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-600"
+                >
+                  {isDarkMode ? <Icons.Sun /> : <Icons.Moon />}
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 mt-4 border-t border-slate-100 dark:border-slate-700 pt-3 overflow-x-auto">
+              <button 
+                onClick={() => setActiveTab('dashboard')}
+                className={`pb-1.5 px-3 rounded-lg font-medium flex items-center gap-2 transition-all whitespace-nowrap text-sm ${
+                  activeTab === 'dashboard' 
+                    ? 'bg-pink-500 text-white' 
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`}
+              >
+                Dashboard
+              </button>
+              <button 
+                onClick={() => setActiveTab('manage')}
+                className={`pb-1.5 px-3 rounded-lg font-medium flex items-center gap-2 transition-all whitespace-nowrap text-sm ${
+                  activeTab === 'manage' 
+                    ? 'bg-pink-500 text-white' 
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`}
+              >
+                Kelola Barang & Anggaran
+              </button>
+            </div>
+          </header>
+
+          <main className="space-y-6">
+            {activeTab === 'dashboard' && (
+              <div className="space-y-6">
+                
+                {/* HERO CARD COUNTDOWN - BEAUTIFIED & GLOWING */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-tr from-rose-500 via-pink-600 to-violet-600 p-8 text-white shadow-xl shadow-rose-500/15 dark:shadow-none border border-white/10">
+                  <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
+                  <div className="absolute -left-10 -top-10 w-48 h-48 rounded-full bg-pink-400/20 blur-3xl pointer-events-none"></div>
+                  
+                  <div className="absolute right-8 top-6 opacity-10 pointer-events-none animate-pulse-slow">
+                    <svg className="w-36 h-36 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </div>
+                  
+                  <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                    {/* Left Column: Countdown */}
+                    <div className="space-y-4 text-center md:text-left flex-1 w-full">
+                      <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full border border-white/10 shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span>
+                        HARI BAHAGIA KITA
+                      </div>
+                      
+                      <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4 justify-center md:justify-start">
+                        {countdownStats.isPast ? (
+                          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight drop-shadow-md">
+                            Pernikahan Telah Berlangsung! 🎉
+                          </h2>
+                        ) : countdownStats.isToday ? (
+                          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight drop-shadow-md animate-bounce text-yellow-300">
+                            Hari Ini Adalah Hari Pernikahan Kita! ❤️💍
+                          </h2>
+                        ) : (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-pink-100 text-xs font-semibold tracking-wide">Menghitung Mundur Janji Suci:</span>
+                            <div className="flex items-center justify-center md:justify-start gap-3">
+                              <span className="text-5xl md:text-6xl font-black text-yellow-300 tracking-tight drop-shadow-[0_4px_12px_rgba(253,224,71,0.35)]">
+                                {countdownStats.daysLeft}
+                              </span>
+                              <div className="flex flex-col text-left justify-center">
+                                <span className="text-lg md:text-xl font-bold tracking-wide">Hari Lagi ✨</span>
+                                <span className="text-xs text-pink-100/80 font-medium">menuju petualangan seumur hidup</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3 pt-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-pink-100 font-medium">Tanggal Pernikahan:</span>
+                          
+                          {isEditingDate ? (
+                            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md p-1.5 rounded-xl border border-white/30 animate-fade-in shrink-0">
+                              <input 
+                                type="date" 
+                                value={data.weddingDate || '2027-01-01'}
+                                onChange={(e) => handleUpdateWeddingDate(e.target.value)}
+                                className="bg-white text-slate-800 px-2 py-1 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-500 w-32"
+                              />
+                              <button 
+                                onClick={() => setIsEditingDate(false)}
+                                className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all"
+                                title="Batal"
+                              >
+                                <Icons.X />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/10 transition-all shadow-sm">
+                              <span className="text-xs font-bold tracking-wide text-white">
+                                {countdownStats.formattedDate}
+                              </span>
+                              <button 
+                                onClick={() => setIsEditingDate(true)}
+                                className="text-pink-100/70 hover:text-white hover:scale-110 p-0.5 rounded transition-all"
+                                title="Ubah Tanggal Pernikahan"
+                              >
+                                <Icons.Pencil />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Beautiful Couple Names */}
+                    <div className="flex flex-col items-center md:items-end text-center md:text-right border-t md:border-t-0 md:border-l border-white/20 pt-4 md:pt-0 md:pl-8 shrink-0 w-full md:w-auto">
+                      <div className="text-[10px] font-extrabold uppercase tracking-widest text-pink-200 mb-1 flex items-center gap-1.5 justify-center md:justify-end">
+                        <span>💍</span> PASANGAN BERBAHAGIA
+                      </div>
+                      
+                      {isEditingNames ? (
+                        <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md p-1.5 rounded-xl border border-white/30 animate-fade-in justify-center md:justify-end">
+                          <input 
+                            type="text" 
+                            value={data.coupleNames || 'Romeo & Juliet'}
+                            onChange={(e) => handleUpdateCoupleNames(e.target.value)}
+                            className="bg-white text-slate-800 px-2.5 py-1 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-500 w-40"
+                            placeholder="Nama Pasangan"
+                            onKeyDown={(e) => e.key === 'Enter' && setIsEditingNames(false)}
+                          />
+                          <button 
+                            onClick={() => setIsEditingNames(false)}
+                            className="p-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-all"
+                            title="Selesai"
+                          >
+                            <Icons.Check />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 justify-center md:justify-end">
+                          <h3 className="text-xl md:text-2xl font-extrabold tracking-tight drop-shadow-sm text-yellow-300 font-serif italic">
+                            {data.coupleNames || 'Romeo & Juliet'}
+                          </h3>
+                          <button 
+                            onClick={() => setIsEditingNames(true)}
+                            className="text-pink-100/70 hover:text-white hover:scale-110 p-0.5 rounded transition-all"
+                            title="Ubah Nama"
+                          >
+                            <Icons.Pencil />
+                          </button>
+                        </div>
+                      )}
+                      <span className="text-[10px] text-pink-100/90 mt-1 font-medium italic">Saling berjanji untuk setia selamanya 💍</span>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 mb-2">
+                      <Icons.Wallet />
+                      <h3 className="font-medium text-sm">Total Anggaran</h3>
+                    </div>
+                    <p className="text-2xl font-bold text-slate-950 dark:text-white">{formatIDR(stats.totalBudget)}</p>
+                  </div>
+                  
+                  <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 mb-2">
+                      <Icons.CheckCircle />
+                      <h3 className="font-medium text-sm">Total Terpakai</h3>
+                    </div>
+                    <p className="text-2xl font-bold text-slate-950 dark:text-white">{formatIDR(stats.totalSpent)}</p>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 mb-2">
+                      <Icons.Pie />
+                      <h3 className="font-medium text-sm">Sisa Anggaran</h3>
+                    </div>
+                    <p className="text-2xl font-bold text-slate-950 dark:text-white">
+                      {formatIDR(stats.totalBudget - stats.totalSpent)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 space-y-6">
+                    <h3 className="text-md font-bold text-slate-900 dark:text-white">Progres Persiapan</h3>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500 dark:text-slate-400">Progres Keuangan</span>
+                        <span className="font-semibold text-pink-500 dark:text-pink-400">{stats.progressPercent}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-pink-500 to-purple-500 h-4 rounded-full transition-all duration-1000"
+                          style={{ width: `${stats.progressPercent}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500 dark:text-slate-400">Barang Dibeli ({stats.itemsBought}/{stats.totalItems})</span>
+                        <span className="font-semibold text-blue-500 dark:text-blue-400">{stats.itemProgressPercent}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-blue-400 to-teal-400 h-4 rounded-full transition-all duration-1000"
+                          style={{ width: `${stats.itemProgressPercent}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row items-center gap-8">
+                    <div className="w-40 h-40 flex-shrink-0 relative">
+                      <PieChartSVG data={stats.categoryTotals} />
+                    </div>
+                    <div className="flex-1 w-full space-y-3">
+                      <h3 className="text-md font-bold text-slate-900 dark:text-white mb-2">Distribusi Anggaran</h3>
+                      <div className="max-h-40 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                        {stats.categoryTotals.length > 0 ? stats.categoryTotals.map((cat, i) => {
+                          const colors = ['bg-rose-500', 'bg-violet-500', 'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'];
+                          const percent = ((cat.value / stats.totalBudget) * 100).toFixed(1);
+                          return (
+                            <div key={i} className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2.5 h-2.5 rounded-full ${colors[i % colors.length]}`}></span>
+                                <span className="text-slate-600 dark:text-slate-300 truncate max-w-[120px]" title={cat.name}>{cat.name}</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="font-semibold">{percent}%</span>
+                              </div>
+                            </div>
+                          )
+                        }) : (
+                          <p className="text-xs text-slate-400">Tambahkan barang dengan harga untuk melihat grafik distribusi anggaran.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'manage' && (
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                  <h3 className="text-md font-bold mb-3 text-slate-900 dark:text-white">Kategori Baru</h3>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                      placeholder="Contoh: Catering, Busana, Gedung..."
+                      className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 text-slate-900 dark:text-white text-sm"
+                    />
+                    <button 
+                      onClick={handleAddCategory}
+                      disabled={!newCategoryName.trim()}
+                      className="bg-pink-500 hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl font-semibold text-sm transition-colors flex items-center gap-2"
+                    >
+                      <Icons.Plus /> <span>Tambah</span>
+                    </button>
+                  </div>
+                </div>
+
+                {data.categories.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800">
+                    <p className="text-sm">Belum ada kategori persiapan. Tambahkan kategori pertama Anda di atas.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {data.categories.map(category => (
+                      <div key={category.id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                        <div 
+                          className="bg-slate-50/50 dark:bg-slate-900/40 p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center group cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/55 transition-colors"
+                          onClick={() => toggleCategory(category.id)}
+                        >
+                          {editingCategory === category.id ? (
+                            <div className="flex items-center gap-2 flex-1 mr-4" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="text"
+                                value={editCategoryName}
+                                onChange={(e) => setEditCategoryName(e.target.value)}
+                                className="flex-1 px-3 py-1 bg-white dark:bg-slate-800 border border-pink-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-pink-500 text-slate-900 dark:text-white text-sm"
+                                autoFocus
+                                onKeyDown={(e) => e.key === 'Enter' && saveEditCategory()}
+                              />
+                              <button onClick={saveEditCategory} className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg"><Icons.Check /></button>
+                              <button onClick={() => setEditingCategory(null)} className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg"><Icons.X /></button>
+                            </div>
+                          ) : (
+                            <h3 className="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                              {expandedCategories[category.id] !== false ? <Icons.ChevronDown /> : <Icons.ChevronRight />}
+                              {category.name}
+                              <span className="text-[11px] font-normal text-slate-500 bg-slate-200/60 dark:bg-slate-700 px-2 py-0.5 rounded-full">
+                                {category.items.length} item
+                              </span>
+                            </h3>
+                          )}
+                          
+                          {editingCategory !== category.id && (
+                            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                              <button onClick={() => startEditCategory(category)} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg">
+                                <Icons.Edit />
+                              </button>
+                              <button onClick={() => handleDeleteCategory(category.id)} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg">
+                                <Icons.Trash />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {expandedCategories[category.id] !== false && (
+                          <div className="p-4 space-y-4">
+                            {category.items.length > 0 ? (
+                              <div className="space-y-2">
+                                {category.items.map(item => (
+                                  <div 
+                                    key={item.id} 
+                                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border transition-all ${
+                                      item.isBought 
+                                        ? 'bg-emerald-50/20 dark:bg-emerald-955/10 border-emerald-100 dark:border-emerald-900/20' 
+                                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700/60 hover:border-slate-200 dark:hover:border-slate-600'
+                                    }`}
+                                  >
+                                    {editingItemId === item.id ? (
+                                      <div className="flex flex-col sm:flex-row gap-2 w-full items-center">
+                                        <input
+                                          type="text"
+                                          value={editItemName}
+                                          onChange={(e) => setEditItemName(e.target.value)}
+                                          className="flex-[2] w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-pink-500 text-slate-955 dark:text-white"
+                                          placeholder="Nama Barang"
+                                        />
+                                        <input
+                                          type="number"
+                                          value={editItemPrice}
+                                          onChange={(e) => setEditItemPrice(e.target.value)}
+                                          className="flex-1 w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-pink-500 text-slate-955 dark:text-white"
+                                          placeholder="Harga"
+                                        />
+                                        <input
+                                          type="text"
+                                          value={editItemDescription}
+                                          onChange={(e) => setEditItemDescription(e.target.value)}
+                                          className="flex-[2] w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-pink-500 text-slate-955 dark:text-white"
+                                          placeholder="Keterangan"
+                                          onKeyDown={(e) => e.key === 'Enter' && saveEditItem(category.id, item.id)}
+                                        />
+                                        <div className="flex gap-1 justify-end w-full sm:w-auto mt-2 sm:mt-0">
+                                          <button onClick={() => saveEditItem(category.id, item.id)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg"><Icons.Check /></button>
+                                          <button onClick={() => setEditingItemId(null)} className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-955/30 rounded-lg"><Icons.X /></button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className="flex items-center gap-3 mb-2 sm:mb-0">
+                                          <button onClick={() => toggleItemBought(category.id, item.id)}>
+                                            {item.isBought ? <Icons.CheckFilled /> : <Icons.Circle />}
+                                          </button>
+                                          <div>
+                                            <p className={`text-sm font-semibold ${item.isBought ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-800 dark:text-slate-100'}`}>
+                                              {item.name}
+                                            </p>
+                                            {item.description && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 italic">Ket: {item.description}</p>}
+                                            {item.isBought && <span className="text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">Lunas/Terbeli</span>}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pl-9 sm:pl-0">
+                                          <span className={`text-sm font-semibold ${item.isBought ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                            {item.price > 0 ? formatIDR(item.price) : <span className="text-slate-400 text-xs italic">Belum ditentukan</span>}
+                                          </span>
+                                          <div className="flex items-center gap-1">
+                                            <button onClick={() => startEditItem(item)} className="text-slate-400 hover:text-blue-500 p-1.5 rounded-lg transition-colors"><Icons.Edit /></button>
+                                            <button onClick={() => handleDeleteItem(category.id, item.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg transition-colors"><Icons.Trash /></button>
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic text-center py-4">Kategori ini kosong, silakan tambah barang di bawah.</p>
+                            )}
+
+                            <div className="flex flex-col md:flex-row gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/60">
+                              <input 
+                                type="text" 
+                                placeholder="Nama barang/kebutuhan"
+                                value={newItemInputs[category.id]?.name || ''}
+                                onChange={(e) => handleUpdateItemInput(category.id, 'name', e.target.value)}
+                                className="flex-[2] px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
+                              />
+                              <input 
+                                type="number" 
+                                placeholder="Estimasi Biaya"
+                                value={newItemInputs[category.id]?.price || ''}
+                                onChange={(e) => handleUpdateItemInput(category.id, 'price', e.target.value)}
+                                className="flex-1 px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
+                              />
+                              <input 
+                                type="text" 
+                                placeholder="Keterangan singkat"
+                                value={newItemInputs[category.id]?.description || ''}
+                                onChange={(e) => handleUpdateItemInput(category.id, 'description', e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddItem(category.id)}
+                                className="flex-[2] px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
+                              />
+                              <button 
+                                onClick={() => handleAddItem(category.id)}
+                                disabled={!newItemInputs[category.id]?.name?.trim()}
+                                className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 disabled:opacity-50 px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 shrink-0"
+                              >
+                                <Icons.Plus /> Tambah
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html></textarea>
+
+  <!-- Container Utama Aplikasi React Hub -->
+  <div id="root"></div>
+
+  <!-- React & App Logic in Babel untuk UI Hub -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    const Icons = {
+      Heart: ({ className = "w-6 h-6 text-pink-500 fill-pink-500" }) => (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+      ),
+      Sun: () => (
+        <svg className="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      ),
+      Moon: () => (
+        <svg className="w-5 h-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      ),
+      Dashboard: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      ),
+      List: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h.01M3 6h.01M3 18h.01M8 12h13M8 6h13M8 18h13"/></svg>
+      ),
+      Terminal: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      ),
+      FileCode: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m8 13-2 2 2 2M16 13l2 2-2 2M13 11l-2 8"/></svg>
+      ),
+      BookOpen: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      ),
+      Copy: () => (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+      ),
+      ExternalLink: () => (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      )
+    };
+
+    function MainApp() {
+      const [currentView, setCurrentView] = useState('demo'); // 'demo' or 'guide'
+      const [currentSubView, setCurrentSubView] = useState('gs'); // 'gs', 'html', 'docs'
+      const [copiedText, setCopiedText] = useState('');
+
+      // Mengambil source code aman dari textarea
+      const codeGS = useMemo(() => document.getElementById('srcCodeGS').value, []);
+      const codeHTML = useMemo(() => document.getElementById('srcCodeHTML').value, []);
+
+      const copyToClipboard = (text, type) => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          setCopiedText(type);
+          setTimeout(() => setCopiedText(''), 3000);
+        } catch (err) {
+          console.error('Gagal menyalin teks:', err);
+        }
+        document.body.removeChild(textarea);
+      };
+
+      return (
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Main Top Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 dark:border-slate-800 pb-6 mb-8 gap-4">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <Icons.Heart className="w-7 h-7 text-pink-500 fill-pink-500" />
+                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+                  Wedding Planner Deployment Hub
+                </h1>
+              </div>
+              <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm md:text-base">
+                Platform deployment instan dan pusat kontrol kode Wedding Planner berbasis Google Spreadsheet.
+              </p>
+            </div>
+            
+            {/* View Switch Button */}
+            <div className="flex p-1 bg-slate-200 dark:bg-slate-800 rounded-2xl w-full md:w-auto">
+              <button
+                onClick={() => setCurrentView('demo')}
+                className={`flex-1 md:flex-initial px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                  currentView === 'demo'
+                    ? 'bg-white dark:bg-slate-700 shadow-md text-slate-900 dark:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Icons.Dashboard /> Live Preview App
+              </button>
+              <button
+                onClick={() => setCurrentView('guide')}
+                className={`flex-1 md:flex-initial px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                  currentView === 'guide'
+                    ? 'bg-white dark:bg-slate-700 shadow-md text-slate-900 dark:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Icons.Terminal /> Setup & File Apps Script
+              </button>
+            </div>
+          </div>
+
+          {/* VIEW: DEMO */}
+          {currentView === 'demo' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-4 rounded-2xl text-sm flex items-start gap-3">
+                <span className="flex-shrink-0 text-amber-500 mt-0.5">⚠️</span>
+                <div>
+                  <strong className="font-semibold block mb-1">Mode Simulasi Preview Aktif:</strong>
+                  Saat ini Anda sedang melihat demo Wedding Planner langsung di dalam modul preview. Semua penambahan atau penyuntingan anggaran tersimpan secara lokal di browser Anda (<code className="bg-amber-500/10 px-1 py-0.5 rounded">localStorage</code>) sehingga aman dicoba. Untuk beralih menggunakan Google Spreadsheet asli, salin kode di tab <strong>Setup & File Apps Script</strong> ke proyek Google Apps Script Anda.
+                </div>
+              </div>
+              
+              {}
+              {/* Load the actual inner app inside the preview */}
+              <iframe 
+                srcDoc={codeHTML.replace('google.script.run', `({
+                  withSuccessHandler(h) { 
+                    this.success = h; 
+                    return this; 
+                  },
+                  withFailureHandler(f) { 
+                    this.failure = f; 
+                    return this; 
+                  },
+                  getPlannerData() {
+                    const localData = localStorage.getItem('wedding_planner_data_canvas');
+                    const d = localData ? JSON.parse(localData) : {
+                      weddingDate: "2027-01-01",
+                      coupleNames: "Romeo & Juliet",
+                      categories: [
+                        {
+                          id: "cat_sample_1",
+                          name: "Venue & Catering",
+                          items: [
+                            { id: "item_s1", name: "Sewa Gedung Pertemuan", price: 25000000, description: "Kapasitas 1000 orang", isBought: true },
+                            { id: "item_s2", name: "Catering Prasmanan (500 pax)", price: 40000000, description: "Paket menu nusantara gold", isBought: false }
+                          ]
+                        },
+                        {
+                          id: "cat_sample_2",
+                          name: "Busana & Rias",
+                          items: [
+                            { id: "item_s3", name: "Baju Pengantin Akad & Resepsi", price: 7500000, description: "Sewa perdana desainer lokal", isBought: true },
+                            { id: "item_s4", name: "Makeup Pengantin & Keluarga", price: 5000000, description: "Termasuk retouch resepis", isBought: false }
+                          ]
+                        }
+                      ]
+                    };
+                    if (!d.coupleNames) d.coupleNames = "Romeo & Juliet";
+                    setTimeout(() => this.success(d), 300);
+                  },
+                  savePlannerData(newData) {
+                    localStorage.setItem('wedding_planner_data_canvas', JSON.stringify(newData));
+                    setTimeout(() => this.success({success: true}), 300);
+                  }
+                })`)}
+                className="w-full border-0 h-[850px] rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800"
+              />
+            </div>
+          )}
+
+          {/* VIEW: GUIDE */}
+          {currentView === 'guide' && (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 animate-fade-in">
+              {/* Left Side: Sidebar Subtabs */}
+              <div className="lg:col-span-1 space-y-2">
+                <button
+                  onClick={() => setCurrentSubView('gs')}
+                  className={`w-full p-3.5 rounded-xl text-left font-semibold text-sm transition-all flex items-center gap-3 ${
+                    currentSubView === 'gs'
+                      ? 'bg-pink-500 text-white shadow-md'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Icons.FileCode /> File: Code.gs
+                </button>
+                <button
+                  onClick={() => setCurrentSubView('html')}
+                  className={`w-full p-3.5 rounded-xl text-left font-semibold text-sm transition-all flex items-center gap-3 ${
+                    currentSubView === 'html'
+                      ? 'bg-pink-500 text-white shadow-md'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Icons.FileCode /> File: Index.html
+                </button>
+                <button
+                  onClick={() => setCurrentSubView('docs')}
+                  className={`w-full p-3.5 rounded-xl text-left font-semibold text-sm transition-all flex items-center gap-3 ${
+                    currentSubView === 'docs'
+                      ? 'bg-pink-500 text-white shadow-md'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Icons.BookOpen /> Panduan Lengkap
+                </button>
+              </div>
+
+              {}
+              {/* Right Side: Code & Content Editor */}
+              <div className="lg:col-span-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+                
+                {/* SUBVIEW: Code.gs */}
+                {currentSubView === 'gs' && (
+                  <div className="space-y-4 flex-1 flex flex-col">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 dark:border-slate-700 pb-4 gap-3">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span className="bg-pink-500/10 text-pink-500 p-1.5 rounded-lg"><Icons.FileCode /></span>
+                          Code.gs
+                        </h2>
+                        <p className="text-xs text-slate-400 mt-0.5">Tipe: Google Apps Script Backend (Server Side)</p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(codeGS, 'gs')}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border shadow-sm transition-all ${
+                          copiedText === 'gs'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                            : 'bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <Icons.Copy /> {copiedText === 'gs' ? 'Tersalin!' : 'Salin Semua Kode'}
+                      </button>
+                    </div>
+                    <div className="bg-slate-900 text-slate-300 p-4 rounded-xl font-mono text-xs overflow-auto h-[450px] custom-scrollbar border border-slate-950">
+                      <pre>{codeGS}</pre>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUBVIEW: Index.html */}
+                {currentSubView === 'html' && (
+                  <div className="space-y-4 flex-1 flex flex-col">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 dark:border-slate-700 pb-4 gap-3">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span className="bg-pink-500/10 text-pink-500 p-1.5 rounded-lg"><Icons.FileCode /></span>
+                          Index.html
+                        </h2>
+                        <p className="text-xs text-slate-400 mt-0.5">Tipe: User Interface Frontend (Client Side - UI)</p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(codeHTML, 'html')}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border shadow-sm transition-all ${
+                          copiedText === 'html'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                            : 'bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <Icons.Copy /> {copiedText === 'html' ? 'Tersalin!' : 'Salin Semua Kode'}
+                      </button>
+                    </div>
+                    <div className="bg-slate-900 text-slate-300 p-4 rounded-xl font-mono text-xs overflow-auto h-[450px] custom-scrollbar border border-slate-950">
+                      <pre>{codeHTML}</pre>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUBVIEW: Panduan Lengkap */}
+                {currentSubView === 'docs' && (
+                  <div className="space-y-6 flex-1 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span className="bg-pink-500/10 text-pink-500 p-1.5 rounded-lg"><Icons.BookOpen /></span>
+                        Panduan Lengkap Publikasi Aplikasi
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-0.5">Selesaikan 5 langkah mudah berikut agar aplikasi online 100%.</p>
+                    </div>
+                    
+                    <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="relative pl-8 border-l-2 border-pink-500/30 dark:border-pink-500/20 py-2">
+                        <span className="absolute left-[-11px] top-2 bg-pink-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md">1</span>
+                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">Siapkan Google Sheet Baru</h4>
+                        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                          Buka <a href="https://sheets.google.com" target="_blank" className="text-pink-500 font-semibold inline-flex items-center gap-0.5 hover:underline font-bold">Google Sheets <Icons.ExternalLink /></a> kemudian buatlah sebuah Spreadsheet kosong baru. Beri judul bebas pada dokumen (contoh: <code className="bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded">Database Wedding Planner</code>).
+                        </p>
+                      </div>
+
+                      <div className="relative pl-8 border-l-2 border-pink-500/30 dark:border-pink-500/20 py-2">
+                        <span className="absolute left-[-11px] top-2 bg-pink-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md">2</span>
+                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">Buka Editor Apps Script</h4>
+                        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                          Pada bagian menu bar atas di Spreadsheet baru Anda, masuk ke menu <strong className="font-semibold text-slate-800 dark:text-slate-100">Ekstensi</strong> (atau <em>Extensions</em>) lalu klik tombol <strong className="font-semibold text-slate-800 dark:text-slate-100">Apps Script</strong>. Layar editor pemrograman Google Apps Script akan terbuka di tab baru.
+                        </p>
+                      </div>
+
+                      <div className="relative pl-8 border-l-2 border-pink-500/30 dark:border-pink-500/20 py-2">
+                        <span className="absolute left-[-11px] top-2 bg-pink-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md">3</span>
+                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">Pasang File Code.gs &amp; Index.html</h4>
+                        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                          Kembali ke panel ini pada tab sebelah kiri, lalu salin seluruh kode dari file <strong className="font-semibold text-slate-800 dark:text-slate-100">Code.gs</strong> dan timpa semua kode di dalam editor <code className="bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">Code.gs</code> milik Google. Klik tombol ikon <strong>+</strong> di samping kiri Google Script -> pilih jenis file <strong>HTML</strong> -> beri nama file <code className="bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">Index</code> (tanpa menulis .html), lalu timpa isi kodenya dengan menyalin file <strong className="font-semibold text-slate-800 dark:text-slate-100">Index.html</strong> dari halaman hub ini. Simpan project script (tekan <kbd className="bg-slate-150 px-1 py-0.5 rounded text-xs">Ctrl + S</kbd>).
+                        </p>
+                      </div>
+
+                      <div className="relative pl-8 border-l-2 border-pink-500/30 dark:border-pink-500/20 py-2">
+                        <span className="absolute left-[-11px] top-2 bg-pink-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md">4</span>
+                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">Deploy Sebagai Aplikasi Web</h4>
+                        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                          Klik tombol biru di pojok kanan atas bertuliskan <strong className="font-semibold text-slate-800 dark:text-slate-100">Terapkan</strong> (atau <em>Deploy</em>) -&gt; pilih <strong className="font-semibold text-slate-800 dark:text-slate-100">Penerapan baru</strong> (atau <em>New deployment</em>). Pada jendela konfigurasi yang muncul, pilih tombol gerigi di sebelah kiri dan pilih jenis <strong className="font-semibold text-slate-800 dark:text-slate-100">Aplikasi Web</strong> (atau <em>Web App</em>). Atur konfigurasi wajib berikut:
+                        </p>
+                        <ul className="list-disc pl-5 mt-2 space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                          <li><strong>Jalankan sebagai:</strong> Pilih <strong className="font-semibold text-slate-800 dark:text-slate-100">Saya</strong> (atau <em>Me</em>).</li>
+                          <li><strong>Siapa yang memiliki akses:</strong> Pilih <strong className="font-semibold text-slate-800 dark:text-slate-100">Siapa saja</strong> (atau <em>Anyone</em>) agar kerabat atau pasangan Anda bisa mengedit datanya secara nirkabel dari ponsel masing-masing.</li>
+                        </ul>
+                      </div>
+
+                      <div className="relative pl-8 py-2">
+                        <span className="absolute left-[-11px] top-2 bg-pink-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md">5</span>
+                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">Berikan Otorisasi Keamanan Google</h4>
+                        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                          Klik tombol <strong className="font-semibold text-slate-800 dark:text-slate-100">Terapkan</strong>. Google akan memunculkan popup permintaan izin akses database. Klik tombol <strong className="font-semibold text-slate-800 dark:text-slate-100">Izinkan Akses</strong> -&gt; Klik akun Google Anda -&gt; Pilih opsi <strong className="font-semibold text-slate-800 dark:text-slate-100">Lanjutan (Advanced)</strong> di kiri bawah -&gt; klik tulisan <strong className="font-semibold text-red-500 underline">Buka Project Anda (Tidak aman)</strong> -&gt; lalu klik <strong className="font-semibold text-slate-800 dark:text-slate-100">Izinkan (Allow)</strong>. Google Apps Script akan memberikan URL Web App yang unik. Selesai! Salin URL itu dan bagikan ke pasangan Anda.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const mainRoot = ReactDOM.createRoot(document.getElementById('root'));
+    mainRoot.render(<MainApp />);
+  </script>
+</body>
+</html>
