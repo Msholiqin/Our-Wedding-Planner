@@ -7,7 +7,7 @@
     <!-- Google Fonts Inter & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
@@ -153,7 +153,7 @@
                                 WEDDING PLANNER
                             </h2>
                             <p class="text-slate-300 text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-none">
-                                Sistem checklist belanja dan pencatatan biaya digital per kategori.Dan penghitung mundur otomatis menuju hari H.
+                                Sistem checklist belanja dan pencatatan biaya digital per kategori. Dan penghitung mundur otomatis menuju hari H.
                             </p>
                             <div class="flex items-center justify-center md:justify-start gap-4 pt-1 sm:pt-2">
                                 <span class="text-lg sm:text-2xl font-black text-brand-300">Rp 45.000</span>
@@ -163,7 +163,7 @@
                             </div>
                         </div>
                         <div class="relative z-10 hidden md:flex items-center justify-center w-60 lg:w-72 h-full">
-                            <img src="https://i.postimg.cc/KYjtmVF8/Gemini-Generated-Image-vhzsrlvhzsrlvhzs.png" onerror="this.src='https://placehold.co/400x400/312e81/ffffff?text=Catatan Pernikahan'" alt="Catatan Pernikahan" class="w-full h-auto max-h-[260px] object-contain rounded-2xl shadow-2xl shadow-brand-500/20 animate-float">
+                            <img src="https://i.postimg.cc/KYjtmVF8/Gemini-Generated-Image-vhzsrlvhzsrlvhzs.png" onerror="this.src='https://placehold.co/400x400/312e81/ffffff?text=Catatan+Pernikahan'" alt="Catatan Pernikahan" class="w-full h-auto max-h-[260px] object-contain rounded-2xl shadow-2xl shadow-brand-500/20 animate-float cursor-pointer" onclick="openProductModal(1)">
                         </div>
                     </div>
 
@@ -188,7 +188,7 @@
                             </div>
                         </div>
                         <div class="relative z-10 hidden md:flex items-center justify-center w-60 lg:w-72 h-full">
-                            <img src="https://placehold.co/500x500/1e293b/ffffff?text=Smartwatch" onerror="this.src='https://placehold.co/400x400/312e81/ffffff?text=Smartwatch'" alt="Smartwatch" class="w-full h-auto max-h-[260px] object-contain rounded-2xl shadow-2xl shadow-emerald-500/20 animate-float">
+                            <img src="https://placehold.co/500x500/1e293b/ffffff?text=Smartwatch" onerror="this.src='https://placehold.co/400x400/312e81/ffffff?text=Smartwatch'" alt="Smartwatch" class="w-full h-auto max-h-[260px] object-contain rounded-2xl shadow-2xl shadow-emerald-500/20 animate-float cursor-pointer" onclick="openProductModal(6)">
                         </div>
                     </div>
 
@@ -213,7 +213,7 @@
                             </div>
                         </div>
                         <div class="relative z-10 hidden md:flex items-center justify-center w-60 lg:w-72 h-full">
-                            <img src="https://placehold.co/500x500/1e293b/ffffff?text=Monitor" onerror="this.src='https://placehold.co/400x400/312e81/ffffff?text=Monitor'" alt="Monitor" class="w-full h-auto max-h-[260px] object-contain rounded-2xl shadow-2xl shadow-indigo-500/20 animate-float">
+                            <img src="https://placehold.co/500x500/1e293b/ffffff?text=Monitor" onerror="this.src='https://placehold.co/400x400/312e81/ffffff?text=Monitor'" alt="Monitor" class="w-full h-auto max-h-[260px] object-contain rounded-2xl shadow-2xl shadow-indigo-500/20 animate-float cursor-pointer" onclick="openProductModal(4)">
                         </div>
                     </div>
                 </div>
@@ -234,7 +234,6 @@
                 </div>
             </div>
 
-            <!-- Categories and Filter Navigation -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
                 <div class="flex gap-2 overflow-x-auto pb-1.5 sm:pb-0 scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                     <button onclick="filterCategory('All')" class="category-btn active px-4.5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-brand-600 text-white shadow-md shadow-brand-500/10">
@@ -276,8 +275,7 @@
             </div>
         </div>
 
-
-        <!-- ================= STREAMING_CHUNK: Rendering Checkout Section ================= -->
+        <!-- ================= CHECKOUT VIEW ================= -->
         <div id="checkout-view" class="hidden space-y-8 animate-fade-in">
             <!-- Header Checkout -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
@@ -328,7 +326,7 @@
                             </div>
                         </div>
 
-                        <!-- Payment Method Section inside single screen -->
+                        <!-- Payment Method Section -->
                         <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/50">
                             <div class="flex items-center gap-3 pb-2">
                                 <div class="h-8 w-8 rounded-lg bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 flex items-center justify-center">
@@ -356,15 +354,15 @@
 
                             <!-- 1. QRIS Visual Details -->
                             <div id="pay-qris" class="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center text-center space-y-4">
-    <div class="flex items-center gap-1.5">
-        <span class="text-red-500 font-extrabold text-sm tracking-wide">QRIS</span>
-        <span class="text-[9px] bg-brand-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-widest">GPN Sukses</span>
-    </div>
-    <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-md">
-        <img src="https://i.postimg.cc/GmCRD8my/Screenshot-2026-06-13-142633.jpg" alt="QRIS Toko" class="h-40 w-40 object-contain mx-auto">
-    </div>
-    <p class="text-xs text-slate-500 dark:text-slate-400">Pindai kode QR di atas dengan aplikasi e-Wallet atau m-Banking Anda.</p>
-</div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-red-500 font-extrabold text-sm tracking-wide">QRIS</span>
+                                    <span class="text-[9px] bg-brand-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-widest">GPN Sukses</span>
+                                </div>
+                                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-md">
+                                    <img src="https://i.postimg.cc/GmCRD8my/Screenshot-2026-06-13-142633.jpg" alt="QRIS Toko" class="h-40 w-40 object-contain mx-auto">
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Pindai kode QR di atas dengan aplikasi e-Wallet atau m-Banking Anda.</p>
+                            </div>
                             <!-- 2. DANA Visual Details -->
                             <div id="pay-dana" class="hidden p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4">
                                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -495,6 +493,78 @@
         </div>
     </div>
 
+    <!-- NEW FEATURE: Product Detail Modal View Overlay & Card -->
+    <div id="product-modal-overlay" onclick="closeProductModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 p-4">
+        <div id="product-modal-card" onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col md:flex-row h-[580px] max-h-[90vh]">
+            
+            <!-- Left Side: Interactive image container -->
+            <div class="md:w-1/2 w-full bg-slate-50 dark:bg-slate-950 flex items-center justify-center relative p-6 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 shrink-0 md:h-full h-[220px]">
+                <div class="absolute top-4 left-4 z-10 flex flex-col gap-1.5" id="modal-tag-container">
+                    <!-- Loaded dynamically -->
+                </div>
+                <img id="modal-product-image" src="" alt="" class="w-full h-full object-contain max-h-[180px] md:max-h-[360px] drop-shadow-xl">
+            </div>
+
+            <!-- Right Side: Content specifications & action tools -->
+            <div class="md:w-1/2 w-full p-6 sm:p-8 flex flex-col justify-between overflow-y-auto h-full space-y-4">
+                
+                <!-- Product content headers -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span id="modal-product-category" class="text-xs font-bold text-brand-500 dark:text-brand-400 uppercase tracking-widest">KATEGORI</span>
+                        <button onclick="closeProductModal()" class="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center transition-colors">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <h3 id="modal-product-name" class="text-lg sm:text-xl font-extrabold leading-snug">Nama Produk Detail</h3>
+                    
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                        <span id="modal-product-rating" class="text-xs font-bold">4.8</span>
+                        <span id="modal-product-reviews" class="text-[10px] text-slate-400 font-medium">(0 ulasan)</span>
+                    </div>
+
+                    <!-- Pricing tag display -->
+                    <div class="space-y-1">
+                        <span id="modal-product-oldprice" class="text-xs text-slate-400 line-through"></span>
+                        <h4 id="modal-product-price" class="text-xl font-extrabold text-brand-600 dark:text-brand-400">Rp 0</h4>
+                    </div>
+
+                    <!-- Short description -->
+                    <p id="modal-product-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed"></p>
+
+                    <!-- Advanced Technical Specs (Enriched detail fields) -->
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                        <h5 class="text-xs font-extrabold tracking-wider text-slate-400 uppercase mb-2">Spesifikasi Detail:</h5>
+                        <ul id="modal-product-specs" class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                            <!-- Injected dynamically -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Footer modal actions & custom quantity selector -->
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                    <!-- Dynamic modal qty calculator -->
+                    <div class="flex items-center justify-between sm:justify-start gap-3">
+                        <span class="text-xs font-bold text-slate-400">Jumlah:</span>
+                        <div class="flex items-center gap-2 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1 bg-slate-50 dark:bg-slate-950">
+                            <button onclick="changeModalQty(-1)" class="h-7 w-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 flex items-center justify-center text-xs font-extrabold transition-all">-</button>
+                            <span id="modal-qty-val" class="text-xs font-extrabold w-6 text-center select-none">1</span>
+                            <button onclick="changeModalQty(1)" class="h-7 w-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 flex items-center justify-center text-xs font-extrabold transition-all">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Direct add to cart trigger -->
+                    <button id="modal-add-to-cart-btn" onclick="" class="flex-grow bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-extrabold py-3 px-5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 transition-all hover:scale-[1.01] cursor-pointer">
+                        <i class="fa-solid fa-cart-plus"></i> Masukkan Keranjang
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Redirecting WhatsApp Loader Modal Overlay -->
     <div id="redirect-modal-overlay" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center space-y-5">
@@ -523,7 +593,7 @@
     </footer>
 
     <script>
-        // Global Application State Store
+        // Global Application State Store (Enriched with deep product specs and information)
         const state = {
             products: [
                 {
@@ -535,8 +605,14 @@
                     rating: 4.5,
                     reviews: 124,
                     tag: "Best Seller",
-                    desc: "Sistem checklist belanja dan pencatatan biaya digital per kategori.Dan penghitung mundur otomatis menuju hari H.",
-                    image: "https://i.postimg.cc/KYjtmVF8/Gemini-Generated-Image-vhzsrlvhzsrlvhzs.png"
+                    desc: "Sistem checklist belanja dan pencatatan biaya digital per kategori. Dan penghitung mundur otomatis menuju hari H pernikahan impian Anda.",
+                    image: "https://i.postimg.cc/KYjtmVF8/Gemini-Generated-Image-vhzsrlvhzsrlvhzs.png",
+                    specs: [
+                        "<strong>Format File:</strong> Link Akses Google Spreadsheets (Siap Pakai)",
+                        "<strong>Fitur Utama:</strong> Checklist belanja, Tracking Pengeluaran & Anggaran",
+                        "<strong>Keunggulan:</strong> Countdown otomatis & kalkulasi persentase pencapaian",
+                        "<strong>Aksesibilitas:</strong> Akses penuh selamanya via Android, iOS, Laptop & PC"
+                    ]
                 },
                 {
                     id: 2,
@@ -547,8 +623,14 @@
                     rating: 4.8,
                     reviews: 82,
                     tag: "Premium",
-                    desc: "Switch linear super senyap dengan pencahayaan RGB kustom cerdas.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Keyboard"
+                    desc: "Switch linear super senyap dengan pencahayaan RGB kustom cerdas. Dioptimalkan untuk penulisan cepat dan kenyamanan ergonomis jangka panjang.",
+                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Keyboard",
+                    specs: [
+                        "<strong>Switch:</strong> Outemu Silent Linear Switches (Hot-Swappable)",
+                        "<strong>Konektivitas:</strong> Triple Mode (Bluetooth, Wireless 2.4Ghz, Type-C)",
+                        "<strong>Material:</strong> Premium ABS Case with Double-Shot Keycaps",
+                        "<strong>Baterai:</strong> Rechargable Li-Po 4000 mAh (Tahan hingga 100 Jam)"
+                    ]
                 },
                 {
                     id: 3,
@@ -559,20 +641,32 @@
                     rating: 4.7,
                     reviews: 145,
                     tag: "Sale 20%",
-                    desc: "Presisi sensor tanpa cela dengan latensi ultra rendah untuk performa esport.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Mouse"
+                    desc: "Presisi sensor tanpa cela dengan latensi ultra rendah untuk performa esport. Bobot super ringan dirancang khusus untuk kenyamanan genggaman profesional.",
+                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Mouse",
+                    specs: [
+                        "<strong>Sensor:</strong> PixArt PAW3395 (Hingga 26.000 DPI)",
+                        "<strong>Bobot:</strong> Ultra-lightweight 53 Gram saja",
+                        "<strong>Koneksi:</strong> Latensi Rendah 2.4Ghz Wireless + Wired Mode",
+                        "<strong>Ketahanan:</strong> Switch Kailh GM 8.0 (Hingga 80 Juta Klik)"
+                    ]
                 },
                 {
                     id: 4,
                     name: "Curved Gaming Monitor 34-Inch",
-                    category: "Aplikasi Catatan",
+                    category: "Aksesoris",
                     price: 4890000,
                     oldPrice: 5990000,
                     rating: 4.9,
                     reviews: 38,
                     tag: "Exclusive",
-                    desc: "Monitor lengkung ultra lebar dengan refresh rate 165Hz untuk visual memukau.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Monitor"
+                    desc: "Monitor lengkung ultra lebar dengan refresh rate 165Hz untuk visual memukau. Sangat cocok untuk gaming imersif maupun produktivitas kerja multitasking.",
+                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Monitor",
+                    specs: [
+                        "<strong>Resolusi:</strong> UWQHD 3440 x 1440 Piksel",
+                        "<strong>Refresh Rate:</strong> 165Hz Refresh Rate dengan Respon 1ms",
+                        "<strong>Kurvatur Layar:</strong> Kelengkungan Sempurna 1500R",
+                        "<strong>Panel & HDR:</strong> VA Panel, 99% sRGB Color Gamut & HDR 10"
+                    ]
                 },
                 {
                     id: 5,
@@ -583,26 +677,40 @@
                     rating: 4.6,
                     reviews: 90,
                     tag: "Stylish",
-                    desc: "Tas kulit sintetis tahan air premium untuk mengamankan laptop dan gadget Anda.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Backpack"
+                    desc: "Tas kulit sintetis tahan air premium untuk mengamankan laptop dan gadget Anda. Memiliki kompartemen cerdas yang didesain ringkas, elegan dan fungsional.",
+                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Backpack",
+                    specs: [
+                        "<strong>Bahan:</strong> Premium Waterproof PU Leather (Kulit Sintetis Premium)",
+                        "<strong>Kapasitas:</strong> Muat untuk Laptop ukuran s.d. 15.6 Inch",
+                        "<strong>Dimensi:</strong> 42 cm x 30 cm x 12 cm",
+                        "<strong>Kantong:</strong> Lengkap dengan slot anti-pencurian di bagian belakang"
+                    ]
                 },
                 {
                     id: 6,
                     name: "Smart Fitness Watch Sport x5",
-                    category: "Aplikasi Catatan",
+                    category: "Aksesoris",
                     price: 1590000,
                     oldPrice: 1890000,
                     rating: 4.8,
                     reviews: 110,
                     tag: "New Arrival",
-                    desc: "Lacak kebugaran secara akurat dengan ketahanan baterai hingga 14 hari berturut.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Smartwatch"
+                    desc: "Lacak kebugaran secara akurat dengan ketahanan baterai hingga 14 hari berturut. Desain tahan air dan mendukung puluhan mode olahraga profesional.",
+                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Smartwatch",
+                    specs: [
+                        "<strong>Layar:</strong> Layar Sentuh AMOLED HD 1.43 Inch Always-On",
+                        "<strong>Kebugaran:</strong> Sensor Detak Jantung, Kadar Oksigen Darah (SpO2) & Pola Tidur",
+                        "<strong>Ketahanan Air:</strong> Bersertifikasi 5ATM (Aman untuk Berenang)",
+                        "<strong>Baterai:</strong> Baterai Tahan hingga 14 Hari Pemakaian Normal"
+                    ]
                 }
             ],
             cart: [],
             activeCategory: 'All',
             activeSection: 'catalog-view', 
-            grandTotalVal: 0 
+            grandTotalVal: 0,
+            activeModalProductId: null,
+            modalQty: 1
         };
 
         // Recommendation Slider State & Controls
@@ -718,7 +826,7 @@
                 card.className = "bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 flex flex-col justify-between hover:shadow-xl dark:hover:shadow-brand-500/5 hover:-translate-y-1 transition-all duration-300 relative group";
                 
                 card.innerHTML = `
-                    <div class="relative w-full rounded-2xl overflow-hidden aspect-square bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                    <div class="relative w-full rounded-2xl overflow-hidden aspect-square bg-slate-50 dark:bg-slate-950 flex items-center justify-center cursor-pointer" onclick="openProductModal(${product.id})">
                         <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                             ${product.tag ? `<span class="bg-brand-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${product.tag}</span>` : ''}
                             ${discountPercentage ? `<span class="bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">-${discountPercentage}%</span>` : ''}
@@ -729,7 +837,7 @@
                     <div class="pt-4 space-y-2 flex-grow flex flex-col justify-between">
                         <div>
                             <span class="text-[10px] font-bold text-brand-500 dark:text-brand-400 uppercase tracking-widest block">${product.category}</span>
-                            <h3 class="text-sm font-extrabold line-clamp-2 leading-snug hover:text-brand-500 transition-colors mt-1">${product.name}</h3>
+                            <h3 class="text-sm font-extrabold line-clamp-2 leading-snug hover:text-brand-500 transition-colors mt-1 cursor-pointer" onclick="openProductModal(${product.id})">${product.name}</h3>
                             <p class="text-xs text-slate-400 dark:text-slate-400 font-medium line-clamp-2 mt-1.5 leading-relaxed">${product.desc}</p>
                         </div>
                         
@@ -755,6 +863,122 @@
                 container.appendChild(card);
             });
         }
+
+        // NEW FEATURE: Open Product Detail Pop-up Modal View
+        function openProductModal(productId) {
+            const product = state.products.find(p => p.id === productId);
+            if (!product) return;
+
+            state.activeModalProductId = productId;
+            state.modalQty = 1;
+            document.getElementById('modal-qty-val').innerText = state.modalQty;
+
+            // Inyect text and elements
+            document.getElementById('modal-product-image').src = product.image;
+            document.getElementById('modal-product-image').onerror = function() {
+                this.src = `https://placehold.co/400x400/312e81/ffffff?text=${product.category}`;
+            };
+            document.getElementById('modal-product-category').innerText = product.category;
+            document.getElementById('modal-product-name').innerText = product.name;
+            document.getElementById('modal-product-rating').innerText = product.rating;
+            document.getElementById('modal-product-reviews').innerText = `(${product.reviews} ulasan)`;
+            document.getElementById('modal-product-price').innerText = formatIDR(product.price);
+            document.getElementById('modal-product-desc').innerText = product.desc;
+
+            // Handling Discount Slash tags
+            const discountPercentage = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : null;
+            const oldPriceEl = document.getElementById('modal-product-oldprice');
+            if (product.oldPrice) {
+                oldPriceEl.innerText = formatIDR(product.oldPrice);
+                oldPriceEl.classList.remove('hidden');
+            } else {
+                oldPriceEl.classList.add('hidden');
+                oldPriceEl.innerText = '';
+            }
+
+            // Handling Tags container inside Modal
+            const tagContainer = document.getElementById('modal-tag-container');
+            tagContainer.innerHTML = '';
+            if (product.tag) {
+                tagContainer.innerHTML += `<span class="bg-brand-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${product.tag}</span>`;
+            }
+            if (discountPercentage) {
+                tagContainer.innerHTML += `<span class="bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">-${discountPercentage}%</span>`;
+            }
+
+            // Populating Technical / Dynamic specifications lists
+            const specsContainer = document.getElementById('modal-product-specs');
+            specsContainer.innerHTML = '';
+            if (product.specs && product.specs.length > 0) {
+                product.specs.forEach(spec => {
+                    const li = document.createElement('li');
+                    li.className = "flex items-start gap-2";
+                    li.innerHTML = `<i class="fa-solid fa-circle-check text-brand-500 mt-0.5 shrink-0"></i> <span>${spec}</span>`;
+                    specsContainer.appendChild(li);
+                });
+            } else {
+                specsContainer.innerHTML = `<li class="text-slate-400 italic">Tidak ada spesifikasi tambahan tersedia.</li>`;
+            }
+
+            // Setting action add trigger button
+            const addBtn = document.getElementById('modal-add-to-cart-btn');
+            addBtn.setAttribute('onclick', `addFromModalToCart(${product.id})`);
+
+            // Reveal modal with styles transitions
+            const overlay = document.getElementById('product-modal-overlay');
+            const card = document.getElementById('product-modal-card');
+            
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            overlay.classList.add('opacity-100');
+            
+            card.classList.remove('scale-95');
+            card.classList.add('scale-100');
+        }
+
+        // NEW FEATURE: Close product modal and animate out
+        function closeProductModal() {
+            const overlay = document.getElementById('product-modal-overlay');
+            const card = document.getElementById('product-modal-card');
+            
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            overlay.classList.remove('opacity-100');
+            
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+            
+            state.activeModalProductId = null;
+        }
+
+        // NEW FEATURE: Adjust modal quantity controls
+        function changeModalQty(delta) {
+            state.modalQty += delta;
+            if (state.modalQty < 1) state.modalQty = 1;
+            document.getElementById('modal-qty-val').innerText = state.modalQty;
+        }
+
+        // NEW FEATURE: Handle adding selected items from pop-up directly to cart
+        function addFromModalToCart(productId) {
+            const product = state.products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existingItem = state.cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.qty += state.modalQty;
+            } else {
+                state.cart.push({ ...product, qty: state.modalQty });
+            }
+
+            renderCart();
+            closeProductModal();
+            showToast(`<i class="fa-solid fa-cart-arrow-down text-emerald-500"></i> Berhasil menambahkan ${state.modalQty} item ke keranjang belanja!`);
+        }
+
+        // Keyboard support: Close modal with "Escape" key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && state.activeModalProductId !== null) {
+                closeProductModal();
+            }
+        });
 
         // Cart Logic Implementations
         function addToCart(productId) {
@@ -999,8 +1223,8 @@
             const invoiceID = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
             const total = document.getElementById('summary-grand-total').innerText;
 
-            // Build WhatsApp Redirect URL
-            const adminWhatsAppNumber = "6281234567890"; // Ganti dengan nomor WhatsApp Admin Anda
+            // Build WhatsApp Redirect URL (Ganti dengan nomor WhatsApp Admin Chelsea Playstation)
+            const adminWhatsAppNumber = "6281271565450"; 
             const productsListText = state.cart.map(item => `- ${item.name} (${item.qty}x)`).join('%0A');
             
             // Format order structure for a highly practical and clean conversational commerce
