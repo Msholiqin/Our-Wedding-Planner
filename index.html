@@ -96,7 +96,7 @@
             <!-- Search Bar Desktop -->
             <div class="hidden md:flex flex-1 max-w-md mx-8">
                 <div class="relative w-full">
-                    <input type="text" id="search-input" oninput="filterProducts()" placeholder="Cari produk impianmu di sini..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all">
+                    <input type="text" id="search-input" oninput="filterProducts()" placeholder="Cari Aplikasi impianmu di sini..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
                     </div>
@@ -126,7 +126,7 @@
         <!-- Search Mobile Panel -->
         <div id="mobile-search-bar" class="hidden border-t border-slate-200 dark:border-slate-800 px-4 py-3 bg-white dark:bg-slate-950">
             <div class="relative w-full">
-                <input type="text" id="search-input-mobile" oninput="filterProductsMobile()" placeholder="Cari produk..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                <input type="text" id="search-input-mobile" oninput="filterProductsMobile()" placeholder="Cari Aplikasi..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
                 </div>
@@ -239,7 +239,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
                 <div class="flex gap-2 overflow-x-auto pb-1.5 sm:pb-0 scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                     <button onclick="filterCategory('All')" class="category-btn active px-4.5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-brand-600 text-white shadow-md shadow-brand-500/10">
-                        Semua Produk
+                        Semua Aplikasi
                     </button>
                     <button onclick="filterCategory('Gadget')" class="category-btn px-4.5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700">
                         Gadget
@@ -272,7 +272,7 @@
                 <div class="h-20 w-20 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 mb-4">
                     <i class="fa-solid fa-magnifying-glass text-3xl"></i>
                 </div>
-                <h3 class="text-lg font-bold">Produk tidak ditemukan</h3>
+                <h3 class="text-lg font-bold">Aplikasi tidak ditemukan</h3>
                 <p class="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-xs">Coba gunakan kata kunci pencarian atau ganti filter kategori lain.</p>
             </div>
         </div>
@@ -502,7 +502,7 @@
         <!-- Drawer Footer Area -->
         <div id="cart-drawer-footer" class="border-t border-slate-100 dark:border-slate-800 p-6 space-y-4 bg-slate-50 dark:bg-slate-950/50">
             <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500 dark:text-slate-400 font-semibold">Subtotal Produk</span>
+                <span class="text-slate-500 dark:text-slate-400 font-semibold">Subtotal Pesanan</span>
                 <span id="drawer-subtotal" class="text-lg font-extrabold">Rp 0</span>
             </div>
             <p class="text-[11px] text-slate-400 leading-normal">Pengiriman instan digital akan dikonfirmasi langsung saat Anda mengirim pesanan via chat WhatsApp.</p>
@@ -936,7 +936,7 @@
         // Initiate Checkout Transition
         function goToCheckout() {
             if (state.cart.length === 0) {
-                showToast(`<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Keranjang belanja kosong! Silakan tambahkan produk dahulu.`);
+                showToast(`<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Keranjang belanja kosong! Silakan tambahkan Pesanan dahulu.`);
                 return;
             }
             toggleCartDrawer(false);
@@ -1022,7 +1022,7 @@
             
             // Format order structure for a highly practical and clean conversational commerce
             let messageText = `Halo Admin Chelsea Playstation! ⚡%0A`;
-            messageText += `Saya ingin melakukan pemesanan produk digital:%0A%0A`;
+            messageText += `Saya ingin melakukan pemesanan Aplikasi digital:%0A%0A`;
             messageText += `*📋 DETAIL PESANAN:*%0A`;
             messageText += `• No. Invoice: *${invoiceID}*%0A`;
             messageText += `• Total Bayar: *${total}*%0A%0A`;
@@ -1033,7 +1033,7 @@
             if (note) messageText += `• Catatan: ${note}%0A`;
             messageText += `%0A*💳 METODE PEMBAYARAN:*%0A`;
             messageText += `• Pilihan: ${paymentDetail}%0A%0A`;
-            messageText += `*🛍️ PRODUK YANG DIPESAN:*%0A${productsListText}%0A%0A`;
+            messageText += `*🛍️ PESANAN YANG DIPESAN:*%0A${productsListText}%0A%0A`;
             messageText += `------------------------------------------%0A`;
             messageText += `*Saya akan langsung mengirimkan foto bukti transfer setelah chat ini terkirim ya min.* 🙏`;
 
