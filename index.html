@@ -74,7 +74,10 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 min-h-screen font-sans flex flex-col">
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 min-h-screen font-sans flex flex-col relative overflow-x-hidden">
+
+    <!-- Background Canvas for Falling Flowers (Behind UI elements but interactive over background) -->
+    <canvas id="flower-falling-canvas" class="fixed inset-0 pointer-events-none z-30"></canvas>
 
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
 
@@ -133,8 +136,58 @@
         </div>
     </header>
 
+    <!-- Flower Effect Customization Widget (Luxurious Floating Controller Panel) -->
+    <div id="flower-settings-panel" class="fixed bottom-6 left-6 z-40 max-w-[280px] transition-all duration-300 select-none hidden sm:block">
+        <button onclick="toggleSettingsWidget()" id="settings-trigger-btn" class="flex items-center gap-2 px-4 py-2.5 bg-white/90 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 transition-all hover:scale-105 hover:border-brand-400">
+            <i class="fa-solid fa-wand-magic-sparkles text-pink-500 animate-pulse"></i> <span>Kelopak Bunga</span> <i class="fa-solid fa-angle-up transition-transform duration-300" id="settings-angle-icon"></i>
+        </button>
+        
+        <div id="settings-panel-content" class="hidden flex-col gap-3.5 p-4 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl mt-2 transition-all">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span class="text-xs font-extrabold tracking-wider bg-gradient-to-r from-pink-500 to-amber-500 bg-clip-text text-transparent uppercase">Atur Bunga Gugur</span>
+                <span class="text-[10px] text-slate-400 font-bold uppercase">Mewah v1.2</span>
+            </div>
+            
+            <!-- Type Selector -->
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Gaya Guguran</label>
+                <div class="grid grid-cols-3 gap-1.5">
+                    <button onclick="setFlowerTheme('sakura')" class="flower-theme-btn px-2 py-1.5 rounded-lg border text-[10px] font-bold transition-all text-center bg-pink-500/10 border-pink-400 text-pink-600 dark:text-pink-300" id="theme-btn-sakura">Sakura</button>
+                    <button onclick="setFlowerTheme('gold')" class="flower-theme-btn px-2 py-1.5 rounded-lg border text-[10px] font-bold transition-all text-center bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-amber-400 hover:text-amber-500" id="theme-btn-gold">Emas</button>
+                    <button onclick="setFlowerTheme('mixed')" class="flower-theme-btn px-2 py-1.5 rounded-lg border text-[10px] font-bold transition-all text-center bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-violet-400 hover:text-violet-500" id="theme-btn-mixed">Campur</button>
+                </div>
+            </div>
+
+            <!-- Intensity Control -->
+            <div class="space-y-1">
+                <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Kerapatan</span>
+                    <span id="label-count">50 Helai</span>
+                </div>
+                <input type="range" id="input-count" min="10" max="150" step="5" value="50" oninput="updateFlowerQuantity()" class="w-full accent-pink-500 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-lg cursor-pointer">
+            </div>
+
+            <!-- Wind control -->
+            <div class="space-y-1">
+                <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Kekuatan Angin</span>
+                    <span id="label-wind">Ringan</span>
+                </div>
+                <input type="range" id="input-wind" min="-1" max="1" step="0.1" value="0.2" oninput="updateFlowerWind()" class="w-full accent-indigo-500 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-lg cursor-pointer">
+            </div>
+
+            <!-- Global Switch -->
+            <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Aktifkan Efek:</span>
+                <button onclick="toggleFlowerAnimation()" id="flower-active-switch" class="px-3.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-[10px] transition-all uppercase tracking-widest shadow-md">
+                    ON
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Container -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
 
         <!-- ================= CATALOG VIEW ================= -->
         <div id="catalog-view" class="space-y-8 block">
@@ -261,7 +314,7 @@
             </div>
 
             <!-- Products Grid -->
-            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 relative z-10">
                 <!-- Products dynamically generated by JS -->
             </div>
             
@@ -276,7 +329,7 @@
         </div>
 
         <!-- ================= CHECKOUT VIEW ================= -->
-        <div id="checkout-view" class="hidden space-y-8 animate-fade-in">
+        <div id="checkout-view" class="hidden space-y-8 animate-fade-in relative z-10">
             <!-- Header Checkout -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
                 <div>
@@ -296,7 +349,7 @@
                 
                 <!-- Left Side: Integrated One-Step Form -->
                 <div class="lg:col-span-7 space-y-6">
-                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 sm:p-7 shadow-sm space-y-6">
+                    <div class="bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 sm:p-7 shadow-sm space-y-6 glass">
                         
                         <!-- Contact Info Group -->
                         <div class="space-y-4">
@@ -415,7 +468,7 @@
 
                 <!-- Right Side: Order Summary sticky -->
                 <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
-                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 shadow-sm space-y-6">
+                    <div class="bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 shadow-sm space-y-6 glass">
                         <div class="border-b border-slate-100 dark:border-slate-800/50 pb-4">
                             <h3 class="text-lg font-bold">Ringkasan Order</h3>
                         </div>
@@ -493,7 +546,7 @@
         </div>
     </div>
 
-    <!-- NEW FEATURE: Product Detail Modal View Overlay & Card -->
+    <!-- Product Detail Modal View Overlay & Card -->
     <div id="product-modal-overlay" onclick="closeProductModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 p-4">
         <div id="product-modal-card" onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col md:flex-row h-[580px] max-h-[90vh]">
             
@@ -585,7 +638,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-950/40 py-6 text-center text-xs text-slate-400 mt-12">
+    <footer class="border-t border-slate-200 dark:border-slate-800/80 bg-white/50 dark:bg-slate-950/40 py-6 text-center text-xs text-slate-400 mt-12 relative z-10">
         <div class="max-w-7xl mx-auto px-4">
             <p class="font-semibold mb-1">&copy; 2026 Chelsea Playstation Store. Semua hak dilindungi.</p>
             <p>Sistem checkout responsif, praktis, dan terintegrasi langsung ke WhatsApp.</p>
@@ -713,6 +766,200 @@
             modalQty: 1
         };
 
+        // Falling Flower Canvas Engine State
+        const flowerConfig = {
+            isActive: true,
+            theme: 'sakura', // 'sakura', 'gold', 'mixed'
+            density: 50,
+            wind: 0.2, // Left to Right wind drift
+            petals: []
+        };
+
+        const canvas = document.getElementById('flower-falling-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeFlowerCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeFlowerCanvas);
+        resizeFlowerCanvas();
+
+        // Elegant Petal Class
+        class Petal {
+            constructor(isInit = false) {
+                this.reset(isInit);
+            }
+
+            reset(isInit = false) {
+                this.x = Math.random() * canvas.width;
+                // If initializing, spread randomly across screen height. Otherwise drop from top.
+                this.y = isInit ? Math.random() * canvas.height : Math.random() * -100 - 20;
+                this.width = Math.random() * 8 + 6; // Luxurious thin shape
+                this.height = Math.random() * 12 + 8;
+                this.opacity = Math.random() * 0.5 + 0.35;
+                this.speedY = Math.random() * 1.2 + 0.7; // Drift down slowly
+                this.speedX = Math.random() * 0.4 - 0.2; // Minor side drift variation
+                this.angle = Math.random() * 360;
+                this.spinSpeed = Math.random() * 1.5 - 0.75; // Elegant tumbling
+                this.swaySpeed = Math.random() * 0.02 + 0.008;
+                this.swayValue = Math.random() * 100;
+
+                // Determine petal color/theme
+                let selectedTheme = flowerConfig.theme;
+                if (selectedTheme === 'mixed') {
+                    selectedTheme = Math.random() > 0.5 ? 'sakura' : 'gold';
+                }
+
+                if (selectedTheme === 'sakura') {
+                    this.colorType = 'sakura';
+                } else {
+                    this.colorType = 'gold'; // Deep rich royal gold
+                }
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.swayValue += this.swaySpeed;
+                // Sway smoothly using sine wave + global wind factor
+                this.x += Math.sin(this.swayValue) * 0.5 + flowerConfig.wind + this.speedX;
+                this.angle += this.spinSpeed;
+
+                // Reset when petal drifts out of boundaries
+                if (this.y > canvas.height + 20 || this.x < -30 || this.x > canvas.width + 30) {
+                    this.reset(false);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.angle * Math.PI) / 180);
+
+                let gradient = ctx.createLinearGradient(0, 0, this.width, this.height);
+                
+                if (this.colorType === 'sakura') {
+                    // Luxurious Pink / Sakura Gradient
+                    gradient.addColorStop(0, `rgba(251, 207, 232, ${this.opacity})`); // soft pink
+                    gradient.addColorStop(0.5, `rgba(244, 63, 94, ${this.opacity * 0.85})`); // deep cherry
+                    gradient.addColorStop(1, `rgba(190, 24, 74, ${this.opacity * 0.7})`); // elegant shadow rose
+                } else {
+                    // Luxury Royal Gold Gradient
+                    gradient.addColorStop(0, `rgba(254, 243, 199, ${this.opacity})`); // champagne gold
+                    gradient.addColorStop(0.5, `rgba(245, 158, 11, ${this.opacity * 0.9})`); // rich amber
+                    gradient.addColorStop(1, `rgba(180, 83, 9, ${this.opacity * 0.7})`); // deep bronze gold
+                }
+
+                ctx.fillStyle = gradient;
+
+                // Draw high-end organic bezier curve petal shape
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(-this.width / 1.5, this.height / 3, -this.width / 1.5, this.height, 0, this.height);
+                ctx.bezierCurveTo(this.width / 1.5, this.height, this.width / 1.5, this.height / 3, 0, 0);
+                ctx.closePath();
+
+                // Dynamic light-sensitive premium bloom shadow for dark mode
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    ctx.shadowColor = this.colorType === 'sakura' ? 'rgba(244, 63, 94, 0.35)' : 'rgba(245, 158, 11, 0.35)';
+                    ctx.shadowBlur = 6;
+                }
+
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Initialize Flower Particles Pool
+        function initFlowerEngine() {
+            flowerConfig.petals = [];
+            for (let i = 0; i < flowerConfig.density; i++) {
+                flowerConfig.petals.push(new Petal(true));
+            }
+        }
+
+        // Main Animation Loop for Flower Canvas
+        function animateFlowerEngine() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (flowerConfig.isActive) {
+                flowerConfig.petals.forEach(petal => {
+                    petal.update();
+                    petal.draw();
+                });
+            }
+            requestAnimationFrame(animateFlowerEngine);
+        }
+
+        // Interactive Flower Settings Functions
+        function toggleSettingsWidget() {
+            const panel = document.getElementById('settings-panel-content');
+            const angleIcon = document.getElementById('settings-angle-icon');
+            
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                panel.classList.add('flex');
+                angleIcon.style.transform = 'rotate(180deg)';
+            } else {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+                angleIcon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function setFlowerTheme(theme) {
+            flowerConfig.theme = theme;
+            
+            document.querySelectorAll('.flower-theme-btn').forEach(btn => {
+                btn.className = "flower-theme-btn px-2 py-1.5 rounded-lg border text-[10px] font-bold transition-all text-center bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:scale-102";
+            });
+
+            const activeBtn = document.getElementById(`theme-btn-${theme}`);
+            if (theme === 'sakura') {
+                activeBtn.className = "flower-theme-btn px-2 py-1.5 rounded-lg border text-[10px] font-bold transition-all text-center bg-pink-500/10 border-pink-400 text-pink-600 dark:text-pink-300";
+            } else if (theme === 'gold') {
+                activeBtn.className = "flower-theme-btn px-2 py-1.5 rounded-lg border text-[10px] font-bold transition-all text-center bg-amber-500/10 border-amber-400 text-amber-600 dark:text-amber-300";
+            } else {
+                activeBtn.className = "flower-theme-btn px-2 py-1.5 rounded-lg border text-[10px] font-bold transition-all text-center bg-violet-500/10 border-violet-400 text-violet-600 dark:text-violet-300";
+            }
+
+            initFlowerEngine();
+            showToast(`<i class="fa-solid fa-seedling text-pink-500"></i> Tema bunga diubah menjadi: <strong>${theme.toUpperCase()}</strong>`);
+        }
+
+        function updateFlowerQuantity() {
+            const val = parseInt(document.getElementById('input-count').value);
+            document.getElementById('label-count').innerText = `${val} Helai`;
+            flowerConfig.density = val;
+            initFlowerEngine();
+        }
+
+        function updateFlowerWind() {
+            const val = parseFloat(document.getElementById('input-wind').value);
+            let speedText = 'Tenang';
+            if (val > 0.5 || val < -0.5) speedText = 'Kencang';
+            else if (val > 0.1 || val < -0.1) speedText = 'Ringan';
+            
+            document.getElementById('label-wind').innerText = speedText;
+            flowerConfig.wind = val;
+        }
+
+        function toggleFlowerAnimation() {
+            flowerConfig.isActive = !flowerConfig.isActive;
+            const switchBtn = document.getElementById('flower-active-switch');
+            
+            if (flowerConfig.isActive) {
+                switchBtn.innerText = "ON";
+                switchBtn.className = "px-3.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-[10px] transition-all uppercase tracking-widest shadow-md";
+                showToast('<i class="fa-solid fa-eye text-emerald-500"></i> Efek kelopak bunga mewah diaktifkan.');
+            } else {
+                switchBtn.innerText = "OFF";
+                switchBtn.className = "px-3.5 py-1.5 rounded-full bg-slate-500 hover:bg-slate-600 text-white font-extrabold text-[10px] transition-all uppercase tracking-widest shadow-md";
+                showToast('<i class="fa-solid fa-eye-slash text-slate-400"></i> Efek kelopak bunga dinonaktifkan.');
+            }
+        }
+
         // Recommendation Slider State & Controls
         let currentSlide = 0;
         let slideInterval = null;
@@ -823,7 +1070,7 @@
             productsList.forEach(product => {
                 const discountPercentage = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : null;
                 const card = document.createElement('div');
-                card.className = "bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 flex flex-col justify-between hover:shadow-xl dark:hover:shadow-brand-500/5 hover:-translate-y-1 transition-all duration-300 relative group";
+                card.className = "bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 flex flex-col justify-between hover:shadow-xl dark:hover:shadow-brand-500/5 hover:-translate-y-1 transition-all duration-300 relative group glass";
                 
                 card.innerHTML = `
                     <div class="relative w-full rounded-2xl overflow-hidden aspect-square bg-slate-50 dark:bg-slate-950 flex items-center justify-center cursor-pointer" onclick="openProductModal(${product.id})">
@@ -864,7 +1111,7 @@
             });
         }
 
-        // NEW FEATURE: Open Product Detail Pop-up Modal View
+        // Open Product Detail Pop-up Modal View
         function openProductModal(productId) {
             const product = state.products.find(p => p.id === productId);
             if (!product) return;
@@ -935,7 +1182,7 @@
             card.classList.add('scale-100');
         }
 
-        // NEW FEATURE: Close product modal and animate out
+        // Close product modal and animate out
         function closeProductModal() {
             const overlay = document.getElementById('product-modal-overlay');
             const card = document.getElementById('product-modal-card');
@@ -949,14 +1196,14 @@
             state.activeModalProductId = null;
         }
 
-        // NEW FEATURE: Adjust modal quantity controls
+        // Adjust modal quantity controls
         function changeModalQty(delta) {
             state.modalQty += delta;
             if (state.modalQty < 1) state.modalQty = 1;
             document.getElementById('modal-qty-val').innerText = state.modalQty;
         }
 
-        // NEW FEATURE: Handle adding selected items from pop-up directly to cart
+        // Handle adding selected items from pop-up directly to cart
         function addFromModalToCart(productId) {
             const product = state.products.find(p => p.id === productId);
             if (!product) return;
@@ -1287,7 +1534,7 @@
         function showToast(message, duration = 4000) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center gap-3 text-xs sm:text-sm font-semibold pointer-events-auto transform translate-y-2 opacity-0 transition-all duration-350 z-50";
+            toast.className = "bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center gap-3 text-xs sm:text-sm font-semibold pointer-events-auto transform translate-y-2 opacity-0 transition-all duration-350 z-50 glass";
             toast.innerHTML = `
                 <div class="flex-grow">${message}</div>
                 <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-2">
@@ -1325,6 +1572,10 @@
             renderProducts();
             renderCart();
             startSlideTimer(); 
+            
+            // Initialize and Run Flower Petals Engine
+            initFlowerEngine();
+            animateFlowerEngine();
         };
     </script>
 </body>
