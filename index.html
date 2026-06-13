@@ -1569,14 +1569,14 @@
             if (paymentMethod === 'qris') {
                 paymentDetail = 'QRIS Instant';
             } else if (paymentMethod === 'dana') {
-                paymentDetail = 'E-Wallet DANA (081271565450 a/n Chelsea Playstation)';
+                paymentDetail = 'E-Wallet DANA (081271565450 a/n Muhamad Sholihin)';
             }
 
             const invoiceID = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
             const total = document.getElementById('summary-grand-total').innerText;
 
             // Build WhatsApp Redirect URL (Ganti dengan nomor WhatsApp Admin Chelsea Playstation)
-            const adminWhatsAppNumber = "6281271565450"; 
+            const adminWhatsAppNumber = "6285171720742"; 
             const productsListText = state.cart.map(item => `- ${item.name} (${item.qty}x)`).join('%0A');
             
             // Format order structure for a highly practical and clean conversational commerce
