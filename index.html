@@ -235,21 +235,15 @@
                 </div>
             </div>
 
-            <!-- Categories and Filter Navigation -->
+          //KATEGORI PRODUK
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
                 <div class="flex gap-2 overflow-x-auto pb-1.5 sm:pb-0 scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                     <button onclick="filterCategory('All')" class="category-btn active px-4.5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-brand-600 text-white shadow-md shadow-brand-500/10">
                         Semua Aplikasi
                     </button>
-                    <button onclick="filterCategory('Gadget')" class="category-btn px-4.5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700">
-                        Gadget
-                    </button>
-                    <button onclick="filterCategory('Audio')" class="category-btn px-4.5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700">
-                        Audio
-                    </button>
-                    <button onclick="filterCategory('Aksesoris')" class="category-btn px-4.5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700">
-                        Aksesoris
-                    </button>
+                    <button onclick="filterCategory('Catatan Pernikahan')" class="category-btn px-4.5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700">
+                      Catatan Pernikahan
+                   
                 </div>
                 <!-- Sort options -->
                 <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -540,87 +534,30 @@
     </footer>
 
     <script>
-        // Global Application State Store
+        // TAMBAH PRODUK
         const state = {
             products: [
                 {
                     id: 1,
-                    name: "Chelsea Playstation ANC Over-Ear Headphones Pro",
-                    category: "Audio",
-                    price: 1890000,
-                    oldPrice: 2450000,
+                    name: "WEDDING PLANNER",
+                    category: "Catatan Pernikahan",
+                    price: 45000,
+                    oldPrice: 60000,
                     rating: 4.9,
                     reviews: 124,
-                    tag: "Best Seller",
-                    desc: "Suara jernih beresolusi tinggi dengan teknologi peredam bising hibrida.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Headphones"
+                    tag: "WebApp",
+                    desc: "Sistem checklist belanja dan pencatatan biaya digital per kategori.Dan penghitung mundur otomatis menuju hari H",
+                    image: "https://i.postimg.cc/KYjtmVF8/Gemini-Generated-Image-vhzsrlvhzsrlvhzs.png"
                 },
-                {
-                    id: 2,
-                    name: "Ergonomic Mechanical Keyboard v2",
-                    category: "Aksesoris",
-                    price: 1299000,
-                    oldPrice: null,
-                    rating: 4.8,
-                    reviews: 82,
-                    tag: "Premium",
-                    desc: "Switch linear super senyap dengan pencahayaan RGB kustom cerdas.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Keyboard"
-                },
-                {
-                    id: 3,
-                    name: "Pro Gaming Wireless Mouse Ultra",
-                    category: "Aksesoris",
-                    price: 799000,
-                    oldPrice: 999000,
-                    rating: 4.7,
-                    reviews: 145,
-                    tag: "Sale 20%",
-                    desc: "Presisi sensor tanpa cela dengan latensi ultra rendah untuk performa esport.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Mouse"
-                },
-                {
-                    id: 4,
-                    name: "Curved Gaming Monitor 34-Inch",
-                    category: "Gadget",
-                    price: 4890000,
-                    oldPrice: 5990000,
-                    rating: 4.9,
-                    reviews: 38,
-                    tag: "Exclusive",
-                    desc: "Monitor lengkung ultra lebar dengan refresh rate 165Hz untuk visual memukau.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Monitor"
-                },
-                {
-                    id: 5,
-                    name: "Minimalist Leather Backpack",
-                    category: "Aksesoris",
-                    price: 649000,
-                    oldPrice: null,
-                    rating: 4.6,
-                    reviews: 90,
-                    tag: "Stylish",
-                    desc: "Tas kulit sintetis tahan air premium untuk mengamankan laptop dan gadget Anda.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Backpack"
-                },
-                {
-                    id: 6,
-                    name: "Smart Fitness Watch Sport x5",
-                    category: "Gadget",
-                    price: 1590000,
-                    oldPrice: 1890000,
-                    rating: 4.8,
-                    reviews: 110,
-                    tag: "New Arrival",
-                    desc: "Lacak kebugaran secara akurat dengan ketahanan baterai hingga 14 hari berturut.",
-                    image: "https://placehold.co/500x500/1e293b/ffffff?text=Smartwatch"
-                }
+             
             ],
             cart: [],
             activeCategory: 'All',
             activeSection: 'catalog-view', 
             grandTotalVal: 0 
         };
+
+        //BATAS TAMBAH PRODUK
 
         // Recommendation Slider State & Controls
         let currentSlide = 0;
