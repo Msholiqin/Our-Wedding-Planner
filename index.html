@@ -356,31 +356,15 @@
 
                             <!-- 1. QRIS Visual Details -->
                             <div id="pay-qris" class="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center text-center space-y-4">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-red-500 font-extrabold text-sm tracking-wide">QRIS</span>
-                                    <span class="text-[9px] bg-brand-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-widest">GPN Sukses</span>
-                                </div>
-                                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-md">
-                                    <svg class="h-40 w-40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5,5 h20 v20 h-20 z" fill="#000" />
-                                        <path d="M10,10 h10 v10 h-10 z" fill="#fff" />
-                                        <path d="M75,5 h20 v20 h-20 z" fill="#000" />
-                                        <path d="M80,10 h10 v10 h-10 z" fill="#fff" />
-                                        <path d="M5,75 h20 v20 h-20 z" fill="#000" />
-                                        <path d="M10,80 h10 v10 h-10 z" fill="#fff" />
-                                        <rect x="35" y="10" width="10" height="15" fill="#000"/>
-                                        <rect x="50" y="5" width="15" height="10" fill="#000"/>
-                                        <rect x="35" y="35" width="20" height="20" fill="#000"/>
-                                        <rect x="15" y="45" width="10" height="15" fill="#000"/>
-                                        <rect x="75" y="45" width="15" height="15" fill="#000"/>
-                                        <rect x="45" y="70" width="20" height="10" fill="#000"/>
-                                        <rect x="70" y="75" width="25" height="10" fill="#000"/>
-                                        <rect x="35" y="85" width="10" height="10" fill="#000"/>
-                                    </svg>
-                                </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Pindai kode QR di atas dengan aplikasi e-Wallet atau m-Banking Anda.</p>
-                            </div>
-
+    <div class="flex items-center gap-1.5">
+        <span class="text-red-500 font-extrabold text-sm tracking-wide">QRIS</span>
+        <span class="text-[9px] bg-brand-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-widest">GPN Sukses</span>
+    </div>
+    <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-md">
+        <img src="https://i.postimg.cc/639xmDv9/QRIS.jpg" alt="QRIS Toko" class="h-40 w-40 object-contain mx-auto">
+    </div>
+    <p class="text-xs text-slate-500 dark:text-slate-400">Pindai kode QR di atas dengan aplikasi e-Wallet atau m-Banking Anda.</p>
+</div>
                             <!-- 2. DANA Visual Details -->
                             <div id="pay-dana" class="hidden p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4">
                                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -1009,7 +993,7 @@
             if (paymentMethod === 'qris') {
                 paymentDetail = 'QRIS Instant';
             } else if (paymentMethod === 'dana') {
-                paymentDetail = 'E-Wallet DANA (081234567890 a/n Chelsea Playstation STORE DIGITAL)';
+                paymentDetail = 'E-Wallet DANA (081271565450 a/n Chelsea Playstation)';
             }
 
             const invoiceID = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
